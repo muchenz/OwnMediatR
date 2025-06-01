@@ -1,0 +1,397 @@
+﻿using Contracts;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using System.Collections.Concurrent;
+using System.Data;
+using System.Linq.Expressions;
+using System.Reflection;
+
+namespace OwnMediatRv2;
+
+
+
+
+//public record GetAlaWrapperCommand(int Age) : ICommandWrapper<int>;
+
+public class Dispatcher
+{
+    private readonly IServiceProvider _serviceProvider;
+
+    public Dispatcher(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    //public async Task<TResult> Send2<TResult>(ICommand<TResult> command)
+    //{
+    //    var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
+
+    //    dynamic handler = _serviceProvider.GetRequiredService(handlerType);
+
+    //    var result = await handler.Handle((dynamic)command);
+    //    return result;
+    //}
+
+
+    public Task<TResult> Send<TResult>(ICommand<TResult> command)
+    {
+        // var handler = _serviceProvider.GetService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
+        // if (handler is null) throw new NullReferenceException("Handler is null");
+        //var result = await InvokeLabdaWithResultAsync(handler, command);
+        //var task = (Task<TResult>)InvokeLamdaAsync(handler, command);
+
+        var res = GeneratedDispatchers.Dispatcher.Send(command, _serviceProvider);
+
+        return res;
+    }
+    public Task<TResult> SendLambda<TResult>(ICommand<TResult> command)
+    {
+        var handler = _serviceProvider.GetService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
+        if (handler is null) throw new NullReferenceException("Handler is null");
+        //var result = await InvokeLabdaWithResultAsync(handler, command);
+        var task = (Task<TResult>)InvokeLamdaAsync(handler, command);
+
+        //GeneratedDispatchers.Dispatcher.Dispatcher;//.Send(command, _serviceProvider);
+
+        return task;
+    }
+
+    public async Task<TResult> SendDelegatr<TResult>(ICommand<TResult> command)
+    {
+        var handler = _serviceProvider.GetService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
+        if (handler is null) throw new NullReferenceException("Handler is null");
+        var result = await InvokeCreateDelegateWithResultAsync(handler, command);
+        //var result = await invo(handler, command);
+
+        return (TResult)result;
+    }
+
+    public async Task Send(ICommand command)
+    {
+        var handler = _serviceProvider.GetService(typeof(ICommandHandler<>).MakeGenericType(command.GetType()));
+        if (handler is null) throw new NullReferenceException("Handler is null");
+        await InvokeLamdaAsync(handler, command);
+    }
+
+    public async Task Send(IEvent evet)
+    {
+        var handler = _serviceProvider.GetService(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
+        if (handler is null) return;
+
+        await InvokeLamdaAsync(handler, evet);
+    }
+
+    public async Task Send(IEnumerable<IEvent> evets)
+    {
+
+        foreach (var evet in evets)
+        {
+            //var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
+
+            //foreach (var handler in handlers)
+            //{
+            //    if (handler is null) continue;
+            //   // await InvokeLamdaAsync(handler, evet);
+            //    await InvokeCreateDelegateAsync(handler, evet);
+            //}
+
+            await GeneratedDispatchers.Dispatcher.Publish(evet, _serviceProvider);
+        }
+    }
+
+    public async Task SendWrapped(IEnumerable<IEvent> evets)
+    {
+
+        foreach (var evet in evets)
+        {
+
+           var eventType = evet.GetType();
+
+            var wrapper = _wappercache.GetOrAdd(eventType,  eventTypekey =>
+            {
+
+                var typedWrapper = typeof(HandlerWrapprer<>).MakeGenericType(eventTypekey);
+
+                var instance  = Activator.CreateInstance(typedWrapper, [ ]);
+
+                return (HandlerWrapprer)instance;
+
+            });
+
+            await wrapper.Handle(evet, _serviceProvider);
+
+        }
+    }
+
+    private static readonly ConcurrentDictionary<Type, HandlerWrapprer>   _wappercache
+    = new(); 
+    public abstract class HandlerWrapprer
+    {
+        public abstract Task Handle(IEvent @event, IServiceProvider serviceProvider);
+    }
+
+    public  class HandlerWrapprer<T>:HandlerWrapprer where T:IEvent
+    {
+
+        public HandlerWrapprer()
+        {
+        }
+        public async  Task HandleTyped(T @event, IServiceProvider serviceProvider)
+        {
+            var handlerType = typeof(IEventHandler<T>);
+
+            var handlers = (IEnumerable<IEventHandler<T>>)serviceProvider.GetServices(handlerType);
+
+            foreach(var handler in handlers)
+            {
+
+                await handler.Handle(@event);
+            }
+        }
+
+
+        public override Task Handle(IEvent @event, IServiceProvider serviceProvider)
+        {
+            return  HandleTyped((T)@event, serviceProvider);
+        }
+    }
+
+
+    public async Task SendR(IEnumerable<IEvent> evets)
+    {
+        foreach (var evet in evets)
+        {
+            await SendReflection(evet);
+        }
+    }
+
+    public async Task SendD(IEnumerable<IEvent> evets)
+    {
+        foreach (var evet in evets)
+        {
+            await SendDynamic(evet);
+        }
+    }
+
+
+    public async Task SendDynamic(IEvent command)
+    {
+        var handlerType = typeof(IEventHandler<>).MakeGenericType(command.GetType());
+
+        IEnumerable<dynamic> handlers = _serviceProvider.GetServices(handlerType);
+
+        foreach (dynamic handler in handlers)
+        {
+            await handler.Handle((dynamic)command);
+        }
+    }
+    private static readonly Dictionary<Type, MethodInfo> _methondCache
+    = new(); // do nothing
+    public async Task SendReflection(IEvent command)
+    {
+        var handlerType = typeof(IEventHandler<>).MakeGenericType(command.GetType());
+
+        var handlers = _serviceProvider.GetServices(handlerType);
+        var method = handlerType.GetMethod("Handle");
+
+        // var method =  _methondCache.GetOrAdd(handlerType, handlerType=>  handlerType.GetMethod("Handle"));
+
+        if (method == null)
+            throw new InvalidOperationException("Metoda 'Handle' nie została znaleziona.");
+
+        foreach (var handler in handlers)
+        {
+            await (Task)method.Invoke(handler, new object[] { command });
+        }
+
+    }
+    public async Task<TResult> SendRefRes<TResult>(ICommand<TResult> command)
+    {
+        var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
+
+        var handler = _serviceProvider.GetRequiredService(handlerType);
+
+        //var method = handlerType.GetMethod("Handle");
+        if (!_methondCache.TryGetValue(handlerType, out var method))
+        {
+            method = handlerType.GetMethod("Handle");
+            _methondCache[handlerType] = method;
+        }
+        if (method == null)
+            throw new InvalidOperationException("Metoda 'Handle' nie została znaleziona.");
+
+        var task = (Task<TResult>)method.Invoke(handler, new object[] { command });
+
+        return await task;
+    }
+
+    public async Task<TResult> SendDynRes<TResult>(ICommand<TResult> command)
+    {
+        var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
+
+        dynamic handler = _serviceProvider.GetRequiredService(handlerType);
+
+
+        return await handler.Handle((dynamic)command);
+    }
+
+    private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task<object>>> _handleCache
+    = new();
+
+    private static Task<object> InvokeLabdaWithResultAsync(object handler, object command) //slow !! - slower than 'invoke' !!
+    {
+        var key = (handler.GetType(), command.GetType());
+
+        var del = _handleCache.GetOrAdd(key, static key =>
+        {
+            var (handlerType, commandType) = key;
+
+            // handler: (object h, object c) => ((ICommandHandler<T>)h).Handle((TCommand)c)
+            var handlerParam = Expression.Parameter(typeof(object), "handler");
+            var commandParam = Expression.Parameter(typeof(object), "command");
+
+            var castedHandler = Expression.Convert(handlerParam, handlerType);
+            var castedCommand = Expression.Convert(commandParam, commandType);
+
+            var handleMethod = handlerType.GetMethod("Handle", new[] { commandType });
+            if (handleMethod == null)
+                throw new InvalidOperationException($"No Handle({commandType.Name}) on {handlerType.Name}");
+
+            var call = Expression.Call(castedHandler, handleMethod, castedCommand);
+
+            //------------------ casting Task<T> => Task<object>
+            var taskResultType = call.Type.GetGenericArguments()[0]; // TResult
+            var convertMethod = typeof(TaskCast)
+                .GetMethod(nameof(TaskCast.Cast))?
+                .MakeGenericMethod(taskResultType);
+
+            var castToObjectTask = Expression.Call(convertMethod!, call); // Task<object>
+
+            return Expression.Lambda<Func<object, object, Task<object>>>(
+                castToObjectTask, handlerParam, commandParam).Compile();
+        });
+
+        return del(handler, command);
+    }
+
+    public static class TaskCast
+    {
+        public static async Task<object> Cast<T>(Task<T> task)
+        {
+            return await task.ConfigureAwait(false);
+        }
+    }
+    private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task<object>>> _cacheWithResult = new();
+
+
+    private static Task InvokeLamdaAsync(object handler, object command)
+    {
+        var key = (handler.GetType(), command.GetType());
+
+        var del = _cache.GetOrAdd(key, static key =>
+        {
+            var (handlerType, commandType) = key;
+
+            // handler: (object h, object c) => ((ICommandHandler<T>)h).Handle((TCommand)c)
+            var handlerParam = Expression.Parameter(typeof(object), "handler");
+            var commandParam = Expression.Parameter(typeof(object), "command");
+
+            var castedHandler = Expression.Convert(handlerParam, handlerType);
+            var castedCommand = Expression.Convert(commandParam, commandType);
+
+            var handleMethod = handlerType.GetMethod("Handle", new[] { commandType });
+            if (handleMethod == null)
+                throw new InvalidOperationException($"No Handle({commandType.Name}) on {handlerType.Name}");
+
+            var call = Expression.Call(castedHandler, handleMethod, castedCommand);
+            var lambda = Expression.Lambda<Func<object, object, Task>>(call, handlerParam, commandParam);
+
+            return lambda.Compile();
+        });
+
+        return del(handler, command);
+    }
+
+    //-------------------------------------------------------------------------------------------------------------------------------
+
+    //private Task<object> InvokeCreateDelegateWithResultAsync2<TResult>(object handler, object command)
+    //{
+    //    var key = (handler.GetType(), command.GetType());
+
+    //    var del = _cacheWithResult.GetOrAdd(key, static key =>
+    //    {
+    //        var method = key.Item1.GetMethod("Handle", new[] { key.Item2 });
+
+    //        return (Func<object, object, Task<object>>)Delegate.CreateDelegate(
+    //            typeof(Func<object, object, Task<TResult>>),
+    //            null, method
+    //        );
+    //    });
+
+    //    return del(handler, command); // ⚡ ~50–100 ns
+    //}
+
+    private Task<object> InvokeCreateDelegateWithResultAsync(object handler, object command)  //slow !! - slower than 'invoke' !!
+    {
+        var key = (handler.GetType(), command.GetType());
+
+        var del = _cacheWithResult.GetOrAdd(key, static key =>
+        {
+            var (handlerType, commandType) = key;
+
+            var method = handlerType.GetMethod("Handle", new[] { commandType });
+            var returnType = method.ReturnType; // Task<TResult>
+            var resultType = returnType.GetGenericArguments()[0];
+
+            // typeof(Func<TH, TC, Task<TR>>)
+            var delegateType = typeof(Func<,,>).MakeGenericType(handlerType, commandType, returnType);
+
+            var openDelegate = Delegate.CreateDelegate(delegateType, method);
+
+            // Tworzymy silnie typowane wywołanie bez refleksji
+            var wrapperType = typeof(StronglyTypedWrapper<,,>).MakeGenericType(handlerType, commandType, resultType);
+            var wrapperMethod = wrapperType.GetMethod("Invoke");
+
+            return (Func<object, object, Task<object>>)Delegate.CreateDelegate(
+                typeof(Func<object, object, Task<object>>),
+                openDelegate,
+                wrapperMethod!
+            );
+        });
+
+        return del(handler, command); // ⚡ ~50–100 ns
+    }
+    public static class StronglyTypedWrapper<TH, TC, TR>
+    {
+        public static async Task<object> Invoke(Func<TH, TC, Task<TR>> del, object h, object c)
+        {
+            var result = await del((TH)h, (TC)c).ConfigureAwait(false);
+            return (object)result!;
+        }
+    }
+    private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task>> _cache = new();
+
+    private Task InvokeCreateDelegateAsync(object handler, object command)  // super slow !! besause DynamicInvoke
+    {
+        var key = (handler.GetType(), command.GetType());
+
+        var del = _cache.GetOrAdd(key, static key =>
+        {
+            var method = key.Item1.GetMethod("Handle", new[] { key.Item2 });
+
+            var delegateType = typeof(Func<,,>)
+            .MakeGenericType(key.handlerType, key.commandType, typeof(Task));
+            var openDelegate = Delegate.CreateDelegate(delegateType, method);
+            //return (object)Delegate.CreateDelegate(
+            //   delegateType,
+            //   method
+            //);
+
+            return (object h, object c) => (Task)openDelegate.DynamicInvoke(h, c);
+        });
+
+        return del(handler, command); // ⚡ ~50–100 ns
+    }
+
+
+}
+
