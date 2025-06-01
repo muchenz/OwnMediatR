@@ -69,7 +69,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher, ISender sender, IPu
     Stopwatch sw2 = Stopwatch.StartNew();
     for (int i = 0; i < 1000000; i++)
 
-        await dispatcher.Send(events);
+        await dispatcher.SendEventsGenerated(events);
 
     Console.WriteLine(sw2.ElapsedMilliseconds + " generated");
     sw2.Restart();
@@ -82,8 +82,12 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher, ISender sender, IPu
     Console.WriteLine(sw2.ElapsedMilliseconds +" dynamic");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
-        await dispatcher.SendWrapped(events);
+        await dispatcher.SendEventsWrapped(events);
     Console.WriteLine(sw2.ElapsedMilliseconds + " wrapped");
+    sw2.Restart();
+    for (int i = 0; i < 1000000; i++)
+        await dispatcher.SendEventsWrapped2(events);
+    Console.WriteLine(sw2.ElapsedMilliseconds + " wrapped2");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
         await publisher.Publish(new AlaArrivedEventMediatr());
