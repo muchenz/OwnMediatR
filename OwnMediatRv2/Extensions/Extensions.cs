@@ -1,6 +1,6 @@
 ﻿using Contracts;
 
-namespace OwnMediatRv2;
+namespace OwnMediatRv2.Extensions;
 
 static class CommandAndQueriesExtension
 {

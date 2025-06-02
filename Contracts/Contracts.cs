@@ -7,7 +7,7 @@ public interface IEventHandler<in IEvent>
 
 }
 public interface ICommand { }
-public interface ICommand<out TResult> { }
+public interface ICommand<in TResult> { }
 
 public interface ICommandHandler<in ICommand>
 {
@@ -21,7 +21,7 @@ public interface ICommandHandler<in TCommand, TResult> where TCommand : ICommand
 }
 
 
-public interface IQuery<out TResult> { }
+public interface IQuery<in TResult> { }
 
 public interface QueryHandler<in TCommand, TResult> where TCommand : ICommand<TResult>
 {

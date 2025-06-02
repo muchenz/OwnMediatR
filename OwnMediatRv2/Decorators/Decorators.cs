@@ -1,7 +1,7 @@
 ﻿using Contracts;
 using FluentValidation;
 
-namespace OwnMediatRv2;
+namespace OwnMediatRv2.Decorators;
 
 class LoggingCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCommand, TResult>
     where TCommand : ICommand<TResult>

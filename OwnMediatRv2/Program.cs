@@ -2,12 +2,16 @@ using Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using OwnMediatRv2;
+using OwnMediatRv2.Extensions;
 using System.Diagnostics;
+using CompiledLambda = OwnMediatRv2.Dispatchers.CompiledLambda;
+;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCommandAndQueries();
 builder.Services.AddScoped<Dispatcher>();
+builder.Services.AddScoped<CompiledLambda.Dispatcher>();
 //builder.Services.AddOpenApi();
 
 builder.Services.AddMediatR(c=>c.RegisterServicesFromAssembly(typeof(Program).Assembly)); 
@@ -22,8 +26,13 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapGet("/weatherforecast", async (Dispatcher dispatcher, ISender sender, IPublisher publisher ,IServiceProvider _serviceProvider ) =>
+app.MapGet("/weatherforecast", async (Dispatcher dispatcher, 
+                                            CompiledLambda.Dispatcher compiledLambda,  
+                                            ISender sender, 
+                                            IPublisher publisher ,
+                                            IServiceProvider _serviceProvider ) =>
 {
+
     var command = new GetAlaCommand(20);
     var commandMediatR = new GetAlaMediatRCommand(20);
     //var age = await dispatcher.Send(new GetAlaCommand(20));
@@ -42,7 +51,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher, ISender sender, IPu
     Console.WriteLine(sw.ElapsedMilliseconds + " generated");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
-        await dispatcher.SendLambda(command);
+        await compiledLambda.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds+ " compiled lambda");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
