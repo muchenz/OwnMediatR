@@ -5,13 +5,14 @@ using OwnMediatRv2;
 using OwnMediatRv2.Extensions;
 using System.Diagnostics;
 using CompiledLambda = OwnMediatRv2.Dispatchers.CompiledLambda;
-;
+using Reflection = OwnMediatRv2.Dispatchers.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCommandAndQueries();
 builder.Services.AddScoped<Dispatcher>();
 builder.Services.AddScoped<CompiledLambda.Dispatcher>();
+builder.Services.AddScoped<Reflection.Dispatcher>();
 //builder.Services.AddOpenApi();
 
 builder.Services.AddMediatR(c=>c.RegisterServicesFromAssembly(typeof(Program).Assembly)); 
@@ -27,7 +28,8 @@ app.UseHttpsRedirection();
 
 
 app.MapGet("/weatherforecast", async (Dispatcher dispatcher, 
-                                            CompiledLambda.Dispatcher compiledLambda,  
+                                            CompiledLambda.Dispatcher compiledLambda,
+                                            Reflection.Dispatcher reflecion,
                                             ISender sender, 
                                             IPublisher publisher ,
                                             IServiceProvider _serviceProvider ) =>
@@ -59,7 +61,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Console.WriteLine(sw.ElapsedMilliseconds +" delegaty");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
-        await dispatcher.SendRefRes(command);
+        await reflecion.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds + " reflection");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
@@ -83,7 +85,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Console.WriteLine(sw2.ElapsedMilliseconds + " generated");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
-        await dispatcher.SendR(events);
+        await reflecion.Send(events);
     Console.WriteLine(sw2.ElapsedMilliseconds + " reflection");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
