@@ -16,30 +16,47 @@ public class Dispatcher
 
     public Task<TResult> Send<TResult>(ICommand<TResult> command)
     {
-        var handler = _serviceProvider.GetService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
+        var handler = _serviceProvider.GetRequiredService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
         if (handler is null) throw new NullReferenceException("Handler is null");
-        //var result = await InvokeLabdaWithResultAsync(handler, command);
         var task = (Task<TResult>)InvokeLamdaAsync(handler, command);
 
-        //GeneratedDispatchers.Dispatcher.Dispatcher;//.Send(command, _serviceProvider);
+
 
         return task;
     }
 
     public async Task Send(ICommand command)
     {
-        var handler = _serviceProvider.GetService(typeof(ICommandHandler<>).MakeGenericType(command.GetType()));
+        var handler = _serviceProvider.GetRequiredService(typeof(ICommandHandler<>).MakeGenericType(command.GetType()));
         if (handler is null) throw new NullReferenceException("Handler is null");
         await InvokeLamdaAsync(handler, command);
     }
 
     public async Task Send(IEvent evet)
     {
-        var handler = _serviceProvider.GetService(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
-        if (handler is null) return;
+        var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
 
-        await InvokeLamdaAsync(handler, evet);
+        foreach (var handler in handlers)
+        {
+            if (handler is null) continue;
+            await InvokeLamdaAsync(handler, evet);
+        }
     }
+    public async Task Send(IEnumerable<IEvent> evets)
+    {
+        foreach (var evet in evets)
+        {
+
+            var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
+            foreach (var handler in handlers)
+            {
+                if (handler is null) continue;
+
+                await InvokeLamdaAsync(handler, evet);
+            }
+        }
+    }
+
     private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task<object>>> _handleCache
     = new();
 

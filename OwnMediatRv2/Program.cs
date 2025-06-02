@@ -43,6 +43,10 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     IEnumerable<IEvent> events = [new AlaArrivedEvent(), new AlaArrivedEvent2()];
     IEnumerable<INotification> event2 = [new AlaArrivedEventMediatr(), new AlaArrivedMediatrEvent2()];
 
+
+    var ala = await compiledLambda.Send(command);
+
+
     Stopwatch sw = Stopwatch.StartNew();
 
     for (int i = 0; i < 1000000; i++)
