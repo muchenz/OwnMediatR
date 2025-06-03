@@ -48,24 +48,6 @@ public class Dispatcher
     }
 
 
-   
-
-    public async Task SendDelegatr(IEnumerable<IEvent> events)
-    {
-        foreach (var e in events)
-        {
-            var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(e.GetType()));
-
-
-            foreach (var handler in handlers)
-            {
-
-                if (handler is null) continue;
-                await InvokeCreateDelegateAsync(handler, e);
-            }
-        }
-    }
-
 
     public async Task SendEventsGenerated(IEnumerable<IEvent> evets)
     {
@@ -87,11 +69,15 @@ public class Dispatcher
 
     public async Task SendEventsWrapped(IEnumerable<IEvent> evets)
     {
-
         foreach (var evet in evets)
         {
+            await SendEventsWrapped(evet);
+        }
+    }
+    public async Task SendEventsWrapped(IEvent e)
+    {
 
-            var eventType = evet.GetType();
+            var eventType = e.GetType();
 
             var wrapper = _wappercache.GetOrAdd(eventType, eventTypekey =>
             {
@@ -104,9 +90,9 @@ public class Dispatcher
 
             });
 
-            await wrapper.Handle(evet, _serviceProvider);
+            await wrapper.Handle(e, _serviceProvider);
 
-        }
+        
     }
 
 
@@ -248,59 +234,6 @@ public class Dispatcher
     private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task<object>>> _handleCache
     = new();
 
-
-
-
-
-
-
-
-    //-------------------------------------------------------------------------------------------------------------------------------
-
-    //private Task<object> InvokeCreateDelegateWithResultAsync2<TResult>(object handler, object command)
-    //{
-    //    var key = (handler.GetType(), command.GetType());
-
-    //    var del = _cacheWithResult.GetOrAdd(key, static key =>
-    //    {
-    //        var method = key.Item1.GetMethod("Handle", new[] { key.Item2 });
-
-    //        return (Func<object, object, Task<object>>)Delegate.CreateDelegate(
-    //            typeof(Func<object, object, Task<TResult>>),
-    //            null, method
-    //        );
-    //    });
-
-    //    return del(handler, command); // ⚡ ~50–100 ns
-    //}
-
-    private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), object> _cache = new();
-
-    private Task InvokeCreateDelegateAsync(object handler, object command)  // super slow !! besause DynamicInvoke
-    {
-        var key = (handler.GetType(), command.GetType());
-
-        var del = (Func<object, object, Task>)_cache.GetOrAdd(key, static key =>
-        {
-            var method = key.Item1.GetMethod("Handle", new[] { key.Item2 });
-
-            var delegateType = typeof(Func<,,>).MakeGenericType(key.handlerType, key.commandType, typeof(Task));
-
-            var openDelegate = Delegate.CreateDelegate(delegateType, method);
-
-            var delee = Delegate.CreateDelegate(
-               delegateType,
-               method
-            );
-
-            return (Func<object, object, Task>)delee;
-
-            //return (object h, object c) => (Task)openDelegate.DynamicInvoke(h, c);
-        });
-
-        return del(handler, command); // ⚡ ~50–100 ns
-    }
-
-      
+       
   
 }
