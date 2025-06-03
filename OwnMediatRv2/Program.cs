@@ -89,6 +89,14 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Console.WriteLine(sw2.ElapsedMilliseconds + " generated");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
+        await compiledLambda.Send(events);
+    Console.WriteLine(sw2.ElapsedMilliseconds + " compiledLambda");
+    sw2.Restart();
+    for (int i = 0; i < 1000000; i++)
+        await dispatcher.InvokeCreateDelegateAsync2(events);
+    Console.WriteLine(sw2.ElapsedMilliseconds + " delegaty");
+    sw2.Restart();
+    for (int i = 0; i < 1000000; i++)
         await reflecion.Send(events);
     Console.WriteLine(sw2.ElapsedMilliseconds + " reflection");
     sw2.Restart();

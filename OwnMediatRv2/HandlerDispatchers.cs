@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+using static OwnMediatRv2.Dispatcher;
 
 namespace OwnMediatRv2;
 
@@ -46,7 +47,7 @@ public class Dispatcher
 
         return res;
     }
-   
+
 
     public async Task<TResult> SendDelegatr<TResult>(ICommand<TResult> command)
     {
@@ -58,7 +59,22 @@ public class Dispatcher
         return (TResult)result;
     }
 
-   
+    public async Task SendDelegatr(IEnumerable<IEvent> events)
+    {
+        foreach (var e in events)
+        {
+            var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(e.GetType()));
+
+
+            foreach (var handler in handlers)
+            {
+
+                if (handler is null) continue;
+                await InvokeCreateDelegateAsync(handler, e);
+            }
+        }
+    }
+
 
     public async Task SendEventsGenerated(IEnumerable<IEvent> evets)
     {
@@ -84,14 +100,14 @@ public class Dispatcher
         foreach (var evet in evets)
         {
 
-           var eventType = evet.GetType();
+            var eventType = evet.GetType();
 
-            var wrapper = _wappercache.GetOrAdd(eventType,  eventTypekey =>
+            var wrapper = _wappercache.GetOrAdd(eventType, eventTypekey =>
             {
 
                 var typedWrapper = typeof(HandlerEventWrapprer<>).MakeGenericType(eventTypekey);
 
-                var instance  = Activator.CreateInstance(typedWrapper, [ ]);
+                var instance = Activator.CreateInstance(typedWrapper, []);
 
                 return (HandlerEventWrapprer)instance;
 
@@ -103,28 +119,28 @@ public class Dispatcher
     }
 
 
-  
 
-    private static readonly ConcurrentDictionary<Type, HandlerEventWrapprer>   _wappercache
-    = new(); 
+
+    private static readonly ConcurrentDictionary<Type, HandlerEventWrapprer> _wappercache
+    = new();
     public abstract class HandlerEventWrapprer
     {
         public abstract Task Handle(IEvent @event, IServiceProvider serviceProvider);
     }
-    
-    public  class HandlerEventWrapprer<T>:HandlerEventWrapprer where T:IEvent
+
+    public class HandlerEventWrapprer<T> : HandlerEventWrapprer where T : IEvent
     {
 
         public HandlerEventWrapprer()
         {
         }
-        public async  Task HandleTyped(T @event, IServiceProvider serviceProvider)
+        public async Task HandleTyped(T @event, IServiceProvider serviceProvider)
         {
             var handlerType = typeof(IEventHandler<T>);
 
             var handlers = (IEnumerable<IEventHandler<T>>)serviceProvider.GetServices(handlerType);
 
-            foreach(var handler in handlers)
+            foreach (var handler in handlers)
             {
 
                 await handler.Handle(@event);
@@ -134,7 +150,7 @@ public class Dispatcher
 
         public override Task Handle(IEvent @event, IServiceProvider serviceProvider)
         {
-            return  HandleTyped((T)@event, serviceProvider);
+            return HandleTyped((T)@event, serviceProvider);
         }
     }
 
@@ -172,7 +188,7 @@ public class Dispatcher
     {
         public abstract Task Handle(IEvent @event);
 
-        public static HandlerEventWrapprer2 Create(IEvent @event, object handler, Type eventType) 
+        public static HandlerEventWrapprer2 Create(IEvent @event, object handler, Type eventType)
         {
             //var eventType = @event.GetType();
             var wrapper = _wappercache2.GetOrAdd(eventType, eventTypekey =>
@@ -187,11 +203,11 @@ public class Dispatcher
     public class HandlerEventWrapprer2<T>(IEventHandler<T> handler) : HandlerEventWrapprer2 where T : IEvent
     {
 
-       
+
         public async Task HandleTyped(T @event)
         {
-            
-                await handler.Handle(@event);
+
+            await handler.Handle(@event);
         }
 
 
@@ -202,7 +218,7 @@ public class Dispatcher
 
     }
     //-----------------------------------------------------------------------
-   
+
 
     public async Task SendD(IEnumerable<IEvent> evets)
     {
@@ -224,9 +240,9 @@ public class Dispatcher
             await handler.Handle((dynamic)command);
         }
     }
-    
-    
-    
+
+
+
 
     public async Task<TResult> SendDynRes<TResult>(ICommand<TResult> command)
     {
@@ -241,13 +257,13 @@ public class Dispatcher
     private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task<object>>> _handleCache
     = new();
 
-   
 
-   
+
+
     private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task<object>>> _cacheWithResult = new();
 
 
-   
+
 
     //-------------------------------------------------------------------------------------------------------------------------------
 
@@ -306,30 +322,89 @@ public class Dispatcher
             return (object)result!;
         }
     }
-    private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), Func<object, object, Task>> _cache = new();
+    private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), object> _cache = new();
 
     private Task InvokeCreateDelegateAsync(object handler, object command)  // super slow !! besause DynamicInvoke
     {
         var key = (handler.GetType(), command.GetType());
 
-        var del = _cache.GetOrAdd(key, static key =>
+        var del = (Func<object, object, Task>)_cache.GetOrAdd(key, static key =>
         {
             var method = key.Item1.GetMethod("Handle", new[] { key.Item2 });
 
-            var delegateType = typeof(Func<,,>)
-            .MakeGenericType(key.handlerType, key.commandType, typeof(Task));
-            var openDelegate = Delegate.CreateDelegate(delegateType, method);
-            //return (object)Delegate.CreateDelegate(
-            //   delegateType,
-            //   method
-            //);
+            var delegateType = typeof(Func<,,>).MakeGenericType(key.handlerType, key.commandType, typeof(Task));
 
-            return (object h, object c) => (Task)openDelegate.DynamicInvoke(h, c);
+            var openDelegate = Delegate.CreateDelegate(delegateType, method);
+
+            var delee = Delegate.CreateDelegate(
+               delegateType,
+               method
+            );
+
+            return (Func<object, object, Task>)delee;
+
+            //return (object h, object c) => (Task)openDelegate.DynamicInvoke(h, c);
         });
 
         return del(handler, command); // ⚡ ~50–100 ns
     }
 
 
-}
 
+
+    public abstract class HandlerWrapper
+        {
+        public abstract Task InvokeAsync(object handler, object command);
+    }
+    public class HandlerWrapper<TH, TC, TR>: HandlerWrapper
+    {
+        private readonly Func<TH, TC, Task> _handle;
+
+        public HandlerWrapper(MethodInfo handleMethod)
+        {
+            _handle = (Func<TH, TC, Task>)Delegate.CreateDelegate(
+                typeof(Func<TH, TC, Task>), handleMethod
+            );
+        }
+
+        public override  Task InvokeAsync(object handler, object command)
+        {
+             return _handle((TH)handler, (TC)command);
+        }
+    }
+
+    private static readonly ConcurrentDictionary<(Type handlerType, Type commandType), HandlerWrapper> _cache333 = new();
+
+    public async Task InvokeCreateDelegateAsync2(IEnumerable<IEvent> events)  // super slow !! besause DynamicInvoke
+    {
+        foreach (var e in events)
+        {
+            var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(e.GetType()));
+           
+
+            foreach (var handler in handlers)
+            {
+                if (handler is null) continue;
+
+                var handlerType = handler.GetType();
+                var commnadType = e.GetType();
+
+                var wr = _cache333.GetOrAdd((handlerType, commnadType), key =>
+                {
+
+
+                    var typedWrapper = typeof(HandlerWrapper<,,>).MakeGenericType(handlerType, commnadType, typeof(Task));
+
+                    var methodInfo = handler.GetType().GetMethod("Handle", new[] { commnadType });
+
+
+                    var wrapper = (HandlerWrapper)Activator.CreateInstance(typedWrapper, methodInfo);
+
+                    return wrapper;
+                });
+
+                await wr.InvokeAsync(handler, e);  
+            }
+        }
+    }
+}

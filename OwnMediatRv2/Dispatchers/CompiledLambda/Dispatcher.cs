@@ -21,7 +21,6 @@ public class Dispatcher
         var task = (Task<TResult>)InvokeLamdaAsync(handler, command);
 
 
-
         return task;
     }
 
