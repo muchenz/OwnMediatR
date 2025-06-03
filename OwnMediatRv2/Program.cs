@@ -6,6 +6,7 @@ using OwnMediatRv2.Extensions;
 using System.Diagnostics;
 using CompiledLambda = OwnMediatRv2.Dispatchers.CompiledLambda;
 using Reflection = OwnMediatRv2.Dispatchers.Reflection;
+using DelegateFunction = OwnMediatRv2.Dispatchers.DelegateFunction;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddCommandAndQueries();
 builder.Services.AddScoped<Dispatcher>();
 builder.Services.AddScoped<CompiledLambda.Dispatcher>();
 builder.Services.AddScoped<Reflection.Dispatcher>();
+builder.Services.AddScoped<DelegateFunction.Dispatcher>();
 //builder.Services.AddOpenApi();
 
 builder.Services.AddMediatR(c=>c.RegisterServicesFromAssembly(typeof(Program).Assembly)); 
@@ -28,8 +30,9 @@ app.UseHttpsRedirection();
 
 
 app.MapGet("/weatherforecast", async (Dispatcher dispatcher, 
-                                            CompiledLambda.Dispatcher compiledLambda,
-                                            Reflection.Dispatcher reflecion,
+                                            CompiledLambda.Dispatcher compiledLambdaDispatcher,
+                                            Reflection.Dispatcher reflecionDispatcher,
+                                            DelegateFunction.Dispatcher delegateFunctionDispatcher,
                                             ISender sender, 
                                             IPublisher publisher ,
                                             IServiceProvider _serviceProvider ) =>
@@ -44,7 +47,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     IEnumerable<INotification> event2 = [new AlaArrivedEventMediatr(), new AlaArrivedMediatrEvent2()];
 
 
-    var ala = await compiledLambda.Send(command);
+    var ala = await compiledLambdaDispatcher.Send(command);
 
 
     Stopwatch sw = Stopwatch.StartNew();
@@ -57,15 +60,15 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Console.WriteLine(sw.ElapsedMilliseconds + " generated");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
-        await compiledLambda.Send(command);
+        await compiledLambdaDispatcher.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds+ " compiled lambda");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
-        await dispatcher.SendDelegatr(command);
+        await delegateFunctionDispatcher.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds +" delegaty");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
-        await reflecion.Send(command);
+        await reflecionDispatcher.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds + " reflection");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
@@ -89,15 +92,15 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Console.WriteLine(sw2.ElapsedMilliseconds + " generated");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
-        await compiledLambda.Send(events);
+        await compiledLambdaDispatcher.Send(events);
     Console.WriteLine(sw2.ElapsedMilliseconds + " compiledLambda");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
-        await dispatcher.InvokeCreateDelegateAsync2(events);
+        await delegateFunctionDispatcher.Send(events);
     Console.WriteLine(sw2.ElapsedMilliseconds + " delegaty");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
-        await reflecion.Send(events);
+        await reflecionDispatcher.Send(events);
     Console.WriteLine(sw2.ElapsedMilliseconds + " reflection");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)

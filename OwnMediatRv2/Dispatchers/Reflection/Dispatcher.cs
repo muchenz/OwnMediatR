@@ -39,6 +39,10 @@ public class Dispatcher
         }
 
     }
+
+
+
+
     private static readonly ConcurrentDictionary<Type, MethodInfo> _methondCache
     = new(); // do nothing
     public async Task<TResult> Send<TResult>(ICommand<TResult> command)
