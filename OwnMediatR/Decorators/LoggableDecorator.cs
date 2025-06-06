@@ -1,4 +1,6 @@
-﻿namespace OwnMediatR.Decorators;
+﻿using OwnMediatR.Lib.Extensions;
+
+namespace OwnMediatR.Decorators;
 
 public static class LoggableDecorator
 {

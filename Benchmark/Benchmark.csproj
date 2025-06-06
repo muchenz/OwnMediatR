@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Contracts\Contracts.csproj" />
-    <ProjectReference Include="..\OwnMediatRv2\OwnMediatRv2.csproj" />
+    <ProjectReference Include="..\OwnMediatRv2\Examplev2.csproj" />
   </ItemGroup>
 
 </Project>

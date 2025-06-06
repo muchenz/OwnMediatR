@@ -1,0 +1,6 @@
+@Example.CRTP_HostAddress = http://localhost:5055
+
+GET {{Example.CRTP_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
