@@ -1,5 +1,5 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Components;
+﻿using Contracts;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
@@ -7,8 +7,8 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using Wrappers;
+using OwnMediatR.Lib.Dispatchers.Wrapperv1;
 using OwnMediatR.Lib.Extensions;
-using Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +22,7 @@ builder.Services.AddCommandAndQueries();
 
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, includeInternalTypes:true);
 //builder.Services.TryDecorateOpenGeneric(typeof(ICommandHandler<,>), typeof(ValidationCommandHandlerDecorator<,>));
-//builder.Services.TryDecorateOpenGeneric(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
+builder.Services.TryDecorateOpenGeneric(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
 
 var app = builder.Build();
 
@@ -42,7 +42,15 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher) =>
 
     //-------------------------------------------------
 
-   
+    var command = new GetAlaCommand(20);
+    var command2 = new GetAlaWrapperCommand(22);
+    Stopwatch sw = Stopwatch.StartNew();
+    //for (int i = 0; i < 1000000; i++)
+
+        await dispatcher.Send(command);
+    Console.WriteLine(sw.ElapsedMilliseconds);
+    sw.Stop();
+    var res2 = await dispatcher.Send(command2);
 
 
     //ICommand[] tab = [new AlaArrivedCommand(), new AlaArrivedCommand2()];
@@ -60,10 +68,30 @@ app.Run();
 
 
 
+public record GetAlaCommand(int Age):ICommand<int>;
+public record GetAlaWrapperCommand(int Age):ICommandWrapper<int>;
+
+public class GetAlaCommandHandler : ICommandHandler<GetAlaCommand, int>
+{   
+
+    public Task<int> Handle(GetAlaCommand command)
+    {
+        return Task.FromResult(command.Age);
+    }
+}
+
+public class GetAlaCommandHandler2 : IHandlerWrapper<GetAlaWrapperCommand, int>
+{
+
+    public Task<MessageAndStatusAndData<int>> Handle(GetAlaWrapperCommand command)
+    {
+        return Task.FromResult(MessageAndStatusAndData<int>.Ok(command.Age));
+    }
+}
 
 
 class LoggingCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCommand, TResult>
-    where TCommand : ICommand<TCommand, TResult>
+    where TCommand : ICommand<TResult>
 {
     private readonly ICommandHandler<TCommand, TResult> _inner;
 
@@ -80,7 +108,7 @@ class LoggingCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TComma
 }
 
 class ValidationCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCommand, TResult>
-    where TCommand : ICommand<TCommand, TResult>
+    where TCommand : ICommand<TResult>
 {
     private readonly ICommandHandler<TCommand, TResult> _inner;
     private readonly IEnumerable<IValidator<TCommand>> _validators;
@@ -118,6 +146,55 @@ class ValidationCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCo
 }
 
 
+namespace Wrappers //for test :)
+{
+    public interface ICommandWrapper<TResult> : ICommand<MessageAndStatusAndData<TResult>>
+    { }
+    public interface IHandlerWrapper<in TWrapper, TResult> : ICommandHandler<TWrapper, MessageAndStatusAndData<TResult>>
+        where TWrapper : ICommandWrapper<TResult>
+    {
+
+    }
+}
+
+public class MessageAndStatus
+{
+    public bool IsError => Status == MessageSatus.Error;
+    public string Status { get; set; }
+    public string Message { get; set; }
+
+}
+
+public class MessageSatus
+{
+    public const string OK = "OK";
+    public const string Error = "ERROR";
+
+}
+
+public class TokenAndEmailData
+{
+    public string Token { get; set; }
+    public string Email { get; set; }
+}
+
+public class MessageAndStatusAndData<T> : MessageAndStatus
+{
+    private MessageAndStatusAndData(T data, string msg, string status)
+    {
+        Data = data;
+        Message = msg;
+        Status = status;
+    }
+
+    public T Data { get; set; }
+
+    public static MessageAndStatusAndData<T> Ok(T data) =>
+        new MessageAndStatusAndData<T>(data, string.Empty, MessageSatus.OK);
+
+    public static MessageAndStatusAndData<T> Fail(string msg) =>
+       new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
+}
 
 
 ///////////

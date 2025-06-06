@@ -1,7 +1,7 @@
-﻿using Contracts;
+﻿using Example.CRTP.Contracts.CRTP;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace OwnMediatR.Lib.Extensions;
+namespace Example.CRTP.Extensions;
 
 public static class CommandAndQueriesExtension
 {

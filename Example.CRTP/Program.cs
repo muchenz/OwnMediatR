@@ -1,10 +1,11 @@
-﻿using Contracts.CRTP;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Collections.Concurrent;
+﻿
+//Curiously Recurring Template Pattern
+
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using Wrappers;
-using OwnMediatR.Lib.Extensions;
+using Example.CRTP.Extensions;
+using Example.CRTP.Contracts.CRTP;
+using FluentValidation;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,12 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<Dispatcher>();
 
 builder.Services.AddCommandAndQueries();
+
+
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, includeInternalTypes: true);
+//builder.Services.TryDecorateOpenGeneric(typeof(ICommandHandler<,>), typeof(ValidationCommandHandlerDecorator<,>));
+builder.Services.TryDecorateOpenGeneric(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
+
 
 var app = builder.Build();
 
@@ -29,14 +36,14 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher) =>
     var command = new GetAlaCommand(20);
     var command2 = new GetAlaWrapperCommand(22);
     Stopwatch sw = Stopwatch.StartNew();
-    for (int i = 0; i < 1000000; i++)
+     //for (int i = 0; i < 1000000; i++)
 
         await dispatcher.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds);
     sw.Stop();
     var res2 = await dispatcher.Send(command2);
 
-    return "OK";
+    return res2.Status + " "+ res2.Data ;
 });
 
 
@@ -54,43 +61,26 @@ public class Dispatcher
 
     public Task<TResult> Send<TCommand, TResult>(ICommand<TCommand, TResult> command) where TCommand : ICommand<TCommand, TResult>
     {
-
-        //var commandHandler =  _serviceProvider.GetRequiredService<ICommandHandler<ICommand<TResult>, TResult>>();
-
-        //var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
-
         using var scope = _serviceProvider.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<TCommand, TResult>>();
 
         var result = handler.Handle((TCommand)command);
 
-        // var result = await commandHandler.Handle(command);
-
         return result;
     }
 
-    public async Task Send<TCommand>(IEnumerable<TCommand> commands) where TCommand : ICommand<TCommand>
+    public async Task Send<TEvent>(IEnumerable<TEvent> events) where TEvent : IEvent<TEvent>
     {
-
-        //var commandHandler =  _serviceProvider.GetRequiredService<ICommandHandler<ICommand<TResult>, TResult>>();
-
-        foreach (var command in commands)
+        foreach (var command in events)
         {
-            //var handlerType = typeof(ICommandHandler<>).MakeGenericType(command.GetType());
-
-            var handlers = _serviceProvider.GetServices<ICommandHandler<TCommand>>();
-            // var handlers = (IEnumerable<ICommandHandler<TCommand>>)_serviceProvider.GetServices(handlerType);
-            //  var handlers = _serviceProvider.GetServices<ICommandHandler<TCommand>>();
+            var handlers = _serviceProvider.GetServices<IEventHandler<TEvent>>();
 
             foreach (var handler in handlers)
             {
-                var hand = handler; // nie działą bo rzutowanie cowariantne, a parametr generyczny kontrawariantny
+                var hand = handler; 
                 await hand.Handle(command);
             }
         }
-
-        // var result = await commandHandler.Handle(command);
-
     }
    
 }
@@ -149,12 +139,6 @@ public class MessageSatus
 
 }
 
-public class TokenAndEmailData
-{
-    public string Token { get; set; }
-    public string Email { get; set; }
-}
-
 public class MessageAndStatusAndData<T> : MessageAndStatus
 {
     private MessageAndStatusAndData(T data, string msg, string status)
@@ -171,4 +155,64 @@ public class MessageAndStatusAndData<T> : MessageAndStatus
 
     public static MessageAndStatusAndData<T> Fail(string msg) =>
        new MessageAndStatusAndData<T>(default, msg, MessageSatus.Error);
+}
+//---------------------------------------------
+
+
+
+
+
+class LoggingCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCommand, TResult>
+    where TCommand : ICommand<TCommand, TResult>
+{
+    private readonly ICommandHandler<TCommand, TResult> _inner;
+
+    public LoggingCommandHandlerDecorator(ICommandHandler<TCommand, TResult> inner)
+    {
+        _inner = inner;
+    }
+
+    public async Task<TResult> Handle(TCommand command)
+    {
+        Console.WriteLine($"[LOG] Handling {typeof(TCommand).Name}");
+        return await _inner.Handle(command);
+    }
+}
+
+class ValidationCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCommand, TResult>
+    where TCommand : ICommand<TCommand, TResult>
+{
+    private readonly ICommandHandler<TCommand, TResult> _inner;
+    private readonly IEnumerable<IValidator<TCommand>> _validators;
+
+    public ValidationCommandHandlerDecorator(ICommandHandler<TCommand, TResult> inner, IEnumerable<IValidator<TCommand>> validators)
+    {
+        _inner = inner;
+        _validators = validators;
+    }
+
+    public async Task<TResult> Handle(TCommand command)
+    {
+
+        if (_validators.Any())
+        {
+            foreach (var validator in _validators)
+            {
+
+                var results = await validator.ValidateAsync(command);
+
+                if (!results.IsValid)
+                {
+
+                    Console.WriteLine($"[VALIDATION]  {string.Join(',', results.Errors.Select(a => a.ErrorMessage))}");
+
+                    return default;
+
+                }
+
+            }
+
+        }
+        return await _inner.Handle(command);
+    }
 }
