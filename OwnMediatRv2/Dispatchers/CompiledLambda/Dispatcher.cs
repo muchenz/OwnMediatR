@@ -16,7 +16,9 @@ public class Dispatcher
 
     public Task<TResult> Send<TResult>(ICommand<TResult> command)
     {
-        var handler = _serviceProvider.GetRequiredService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
+        using var scope = _serviceProvider.CreateScope();
+
+        var handler = scope.ServiceProvider.GetRequiredService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
         if (handler is null) throw new NullReferenceException("Handler is null");
         var task = (Task<TResult>)InvokeLamdaAsync(handler, command);
 
@@ -33,7 +35,9 @@ public class Dispatcher
 
     public async Task Send(IEvent evet)
     {
-        var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
+        using var scope = _serviceProvider.CreateScope();
+
+        var handlers = scope.ServiceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
 
         foreach (var handler in handlers)
         {
@@ -45,8 +49,9 @@ public class Dispatcher
     {
         foreach (var evet in evets)
         {
+            using var scope = _serviceProvider.CreateScope();
 
-            var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
+            var handlers = scope.ServiceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(evet.GetType()));
             foreach (var handler in handlers)
             {
                 if (handler is null) continue;

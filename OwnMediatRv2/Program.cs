@@ -8,6 +8,7 @@ using CompiledLambda = OwnMediatRv2.Dispatchers.CompiledLambda;
 using Reflection = OwnMediatRv2.Dispatchers.Reflection;
 using DelegateFunction = OwnMediatRv2.Dispatchers.DelegateFunction;
 using Dynamic = OwnMediatRv2.Dispatchers.Dynamic;
+using Wrapperv1 = OwnMediatRv2.Dispatchers.Wrapperv1;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddScoped<CompiledLambda.Dispatcher>();
 builder.Services.AddScoped<Reflection.Dispatcher>();
 builder.Services.AddScoped<DelegateFunction.Dispatcher>();
 builder.Services.AddScoped<Dynamic.Dispatcher>();
+builder.Services.AddScoped<Wrapperv1.Dispatcher>();
 //builder.Services.AddOpenApi();
 
 builder.Services.AddMediatR(c=>c.RegisterServicesFromAssembly(typeof(Program).Assembly)); 
@@ -36,6 +38,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
                                             Reflection.Dispatcher reflecionDispatcher,
                                             DelegateFunction.Dispatcher delegateFunctionDispatcher,
                                             Dynamic.Dispatcher dynamicDispatcher,
+                                            Wrapperv1.Dispatcher wrapperv1Dispatcher,
                                             ISender sender, 
                                             IPublisher publisher ,
                                             IServiceProvider _serviceProvider ) =>
@@ -79,6 +82,10 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Console.WriteLine(sw.ElapsedMilliseconds + " deymamic");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
+        await wrapperv1Dispatcher.Send(command);
+    Console.WriteLine(sw.ElapsedMilliseconds + " wrapperv1");
+    sw.Restart();
+    for (int i = 0; i < 1000000; i++)
         await sender.Send(commandMediatR);
     Console.WriteLine(sw.ElapsedMilliseconds+ " mediatR");
     sw.Stop();
@@ -111,8 +118,8 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Console.WriteLine(sw2.ElapsedMilliseconds +" dynamic");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
-        await dispatcher.SendEventsWrapped(events);
-    Console.WriteLine(sw2.ElapsedMilliseconds + " wrapped");
+        await wrapperv1Dispatcher.Send(events);
+    Console.WriteLine(sw2.ElapsedMilliseconds + " wrapperv1");
     sw2.Restart();
     
     for (int i = 0; i < 1000000; i++)

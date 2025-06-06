@@ -18,9 +18,9 @@ static class CommandAndQueriesExtension
                                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeToRegister))
                            ;
 
-            var handlerTypes2 = handlerTypes.ToList();
+            //var handlerTypes2 = handlerTypes.ToList(); //for debug
 
-            var listArgument = handlerTypes2.Select(a => a.GetGenericArguments().Count()).ToList();
+            //var listArgument = handlerTypes2.Select(a => a.GetGenericArguments().Count()).ToList(); //for debug
 
             handlerTypes.Select(handlerType => new
             {
