@@ -1,8 +1,9 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace OwnMediatRv2.Dispatchers.Reflection;
+namespace OwnMediatR.Lib.Dispatchers.Reflection;
 
 public class Dispatcher
 {

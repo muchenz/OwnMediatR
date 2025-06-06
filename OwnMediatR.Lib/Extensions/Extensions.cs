@@ -1,8 +1,9 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace OwnMediatRv2.Extensions;
+namespace OwnMediatR.Lib.Extensions;
 
-static class CommandAndQueriesExtension
+public static class CommandAndQueriesExtension
 {
     public static void AddCommandAndQueries(this IServiceCollection service)
     {

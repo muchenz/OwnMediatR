@@ -1,8 +1,9 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
-namespace OwnMediatRv2.Dispatchers.CompiledLambda;
+namespace OwnMediatR.Lib.Dispatchers.CompiledLambda;
 
 public class Dispatcher
 {

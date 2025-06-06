@@ -1,8 +1,9 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Reflection;
 
-namespace OwnMediatRv2.Dispatchers.DelegateFunction;
+namespace OwnMediatR.Lib.Dispatchers.DelegateFunction;
 
 public class Dispatcher
 {
@@ -22,7 +23,7 @@ public class Dispatcher
         if (handler is null) throw new NullReferenceException("Handler is null");
         var result = InvokeCreateDelegateWithResultAsync(handler, command);
 
-        return (Task<TResult>)(object)result;
+        return (Task<TResult>)result;
     }
 
 

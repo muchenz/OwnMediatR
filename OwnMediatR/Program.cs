@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using OwnMediatR.Ver2;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -15,7 +14,6 @@ var builder = WebApplication.CreateBuilder(args);
 //builder.Services.AddOpenApi();
 //builder.Services.AddScoped<ICommandHandler<GetAlaCommand, int>, GetAlaCommandHandler>();
 builder.Services.AddScoped<Dispatcher>();
-builder.Services.AddScoped<Dispatcherv2>();
 
 builder.Services.AddCommandAndQueries();
 
@@ -34,12 +32,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapGet("/weatherforecast", async (Dispatcher dispatcher, OwnMediatR.Ver2.Dispatcherv2 dispatcherv2 ) =>
+app.MapGet("/weatherforecast", async (Dispatcher dispatcher) =>
 {
-    var commandv2 = new GetAlaCommandV2(20);
 
 
-    var resV2 = await dispatcherv2.Send(commandv2);
 
     //-------------------------------------------------
 
@@ -115,16 +111,17 @@ public class Dispatcher
         _serviceProvider = serviceProvider;
     }
 
-    public  async Task<TResult> Send<TCommand, TResult>(ICommand<TCommand, TResult> command)  where TCommand : ICommand<TCommand, TResult>
+    public   Task<TResult> Send<TCommand, TResult>(ICommand<TCommand, TResult> command)  where TCommand : ICommand<TCommand, TResult>
     {
 
         //var commandHandler =  _serviceProvider.GetRequiredService<ICommandHandler<ICommand<TResult>, TResult>>();
 
         //var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
 
-        var handler =  _serviceProvider.GetRequiredService<ICommandHandler<TCommand, TResult>>();
+        using var scope = _serviceProvider.CreateScope();
+        var handler =  scope.ServiceProvider.GetRequiredService<ICommandHandler<TCommand, TResult>>();
        
-        var result =   await handler.Handle(( TCommand)command);
+        var result =    handler.Handle(( TCommand)command);
         
         // var result = await commandHandler.Handle(command);
 
@@ -155,17 +152,7 @@ public class Dispatcher
 
     }
 
-    public async Task Send2<TCommand>(IEnumerable<TCommand> commands) where TCommand : ICommand
-    {
-
-
-        foreach (var command in commands)
-        {
-            await Dispatch(command);
-        }
-
-
-    }
+   
     private static readonly ConcurrentDictionary<Type, Func<object, object, Task>> _dispatchers = new();
 
     public async Task Dispatch(ICommand command)
@@ -233,7 +220,7 @@ static class CommandAndQueriesExtension
     public static void AddCommandAndQueries(this IServiceCollection service)
     {
 
-        Type[] typesToRegister = [typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(OwnMediatR.Ver2.ICommandHandler<,>)];//, typeof(IHandlerWrapper<,>)];
+        Type[] typesToRegister = [typeof(ICommandHandler<,>), typeof(ICommandHandler<>)];//, typeof(IHandlerWrapper<,>)];
 
         foreach (Type typeToRegister in typesToRegister)
         {

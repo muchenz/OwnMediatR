@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGenerator_MY", "Sourc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Contracts\Contracts.csproj", "{4E26522E-7DC6-45D0-8418-1BCAB13DC01B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwnMediatR.Lib", "OwnMediatR.Lib\OwnMediatR.Lib.csproj", "{06094431-6C9A-401E-B94A-7632994D9D1A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{4E26522E-7DC6-45D0-8418-1BCAB13DC01B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E26522E-7DC6-45D0-8418-1BCAB13DC01B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E26522E-7DC6-45D0-8418-1BCAB13DC01B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06094431-6C9A-401E-B94A-7632994D9D1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06094431-6C9A-401E-B94A-7632994D9D1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06094431-6C9A-401E-B94A-7632994D9D1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06094431-6C9A-401E-B94A-7632994D9D1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

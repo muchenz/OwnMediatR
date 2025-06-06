@@ -1,7 +1,8 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
-namespace OwnMediatRv2.Dispatchers.Wrapperv1;
+namespace OwnMediatR.Lib.Dispatchers.Wrapperv1;
 
 public class Dispatcher
 {
@@ -153,7 +154,7 @@ public class Dispatcher
 
         using var scope = _serviceProvider.CreateScope();
       
-        return await ((Task<TResult>) wrapper.Handle(command, scope.ServiceProvider));
+        return await (Task<TResult>) wrapper.Handle(command, scope.ServiceProvider);
 
 
     }

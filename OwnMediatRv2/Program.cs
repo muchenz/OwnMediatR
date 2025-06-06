@@ -2,13 +2,13 @@ using Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
 using OwnMediatRv2;
-using OwnMediatRv2.Extensions;
+using OwnMediatR.Lib.Extensions;
 using System.Diagnostics;
-using CompiledLambda = OwnMediatRv2.Dispatchers.CompiledLambda;
-using Reflection = OwnMediatRv2.Dispatchers.Reflection;
-using DelegateFunction = OwnMediatRv2.Dispatchers.DelegateFunction;
-using Dynamic = OwnMediatRv2.Dispatchers.Dynamic;
-using Wrapperv1 = OwnMediatRv2.Dispatchers.Wrapperv1;
+using CompiledLambda = OwnMediatR.Lib.Dispatchers.CompiledLambda;
+using Reflection = OwnMediatR.Lib.Dispatchers.Reflection;
+using DelegateFunction = OwnMediatR.Lib.Dispatchers.DelegateFunction;
+using Dynamic = OwnMediatR.Lib.Dispatchers.Dynamic;
+using Wrapperv1 = OwnMediatR.Lib.Dispatchers.Wrapperv1;
 
 var builder = WebApplication.CreateBuilder(args);
 

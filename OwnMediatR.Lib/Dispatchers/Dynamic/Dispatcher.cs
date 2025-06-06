@@ -1,6 +1,7 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace OwnMediatRv2.Dispatchers.Dynamic;
+namespace OwnMediatR.Lib.Dispatchers.Dynamic;
 
 public class Dispatcher
 {
