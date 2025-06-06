@@ -4,7 +4,10 @@ using Contracts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OwnMediatR.Lib.Extensions;
+using Reflection = OwnMediatR.Lib.Dispatchers.Reflection;
 using Dynamic= OwnMediatR.Lib.Dispatchers.Dynamic;
+using CompiledLambda = OwnMediatR.Lib.Dispatchers.CompiledLambda;
+using DelegateFunction = OwnMediatR.Lib.Dispatchers.DelegateFunction;
 using Wrapped= OwnMediatR.Lib.Dispatchers.Wrapperv1;
 
 
@@ -15,7 +18,10 @@ BenchmarkRunner.Run<MyBenchmark>();
 [MemoryDiagnoser]
 public class MyBenchmark
 {
+    private Reflection.Dispatcher _reflectionDispatcher;
     private Dynamic.Dispatcher _dynamicDispatcher;
+    private CompiledLambda.Dispatcher _compiledLambdaDispatcher;
+    private DelegateFunction.Dispatcher _delegateFunctionDispatcher;
     private Wrapped.Dispatcher _wrappedDispatcher;
 
     private IEvent[] _events = [new AliceArrivedEvent(), new KellyArrivedEvent()];
@@ -27,21 +33,45 @@ public class MyBenchmark
             .ConfigureServices(services =>
             {
                 services.AddCommandAndQueries();
+                services.AddScoped<Reflection.Dispatcher>();
                 services.AddScoped<Dynamic.Dispatcher>();
+                services.AddScoped<CompiledLambda.Dispatcher>();
+                services.AddScoped<DelegateFunction.Dispatcher>();
                 services.AddScoped<Wrapped.Dispatcher>();
 
             })
             .Build();
 
+        _reflectionDispatcher = host.Services.GetRequiredService<Reflection.Dispatcher>();
         _dynamicDispatcher = host.Services.GetRequiredService<Dynamic.Dispatcher>();
+        _compiledLambdaDispatcher = host.Services.GetRequiredService<CompiledLambda.Dispatcher>();
+        _delegateFunctionDispatcher = host.Services.GetRequiredService<DelegateFunction.Dispatcher>();
         _wrappedDispatcher = host.Services.GetRequiredService<Wrapped.Dispatcher>();
     }
 
+    [Benchmark]
+    public async Task Reflection_Dispatcher()
+    {
+
+        await _reflectionDispatcher.Send(_events);
+    }
     [Benchmark]
     public async Task  Dynamic_Dispatcher()
     {
         
         await _dynamicDispatcher.Send(_events);
+    }
+    [Benchmark]
+    public async Task CompiledLambda_Dispatcher()
+    {
+
+        await _compiledLambdaDispatcher.Send(_events);
+    }
+    [Benchmark]
+    public async Task DelegateFunction_Dispatcher()
+    {
+
+        await _delegateFunctionDispatcher.Send(_events);
     }
 
     [Benchmark]
@@ -52,6 +82,8 @@ public class MyBenchmark
     }
 }
 
+
+//----------------------------------------------------------------------------------------------------------
 
 public record  AliceArrivedEvent : IEvent;
 public record KellyArrivedEvent : IEvent;
@@ -67,7 +99,22 @@ public class AliceArrivedEventHandler : IEventHandler<AliceArrivedEvent>
     }
 }
 
+public class AliceArrivedEventHandler2 : IEventHandler<AliceArrivedEvent>
+{
+    public Task Handle(AliceArrivedEvent @event)
+    {
 
+        return Task.CompletedTask;
+    }
+}
+public class AliceArrivedEventHandler3 : IEventHandler<AliceArrivedEvent>
+{
+    public Task Handle(AliceArrivedEvent @event)
+    {
+
+        return Task.CompletedTask;
+    }
+}
 public class KellyArrivedEventHandler : IEventHandler<KellyArrivedEvent>
 {
     public Task Handle(KellyArrivedEvent @event)
@@ -76,3 +123,8 @@ public class KellyArrivedEventHandler : IEventHandler<KellyArrivedEvent>
         return Task.CompletedTask;
     }
 }
+//-------------------------------------------------------------------------------------------------------
+
+public record Result(int Age);
+
+//public record SetAliceAgeCommand():ICommand<>
