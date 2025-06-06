@@ -25,7 +25,9 @@ public class Dispatcher
     {
         var handlerType = typeof(IEventHandler<>).MakeGenericType(command.GetType());
 
-        var handlers = _serviceProvider.GetServices(handlerType);
+        using var scope = _serviceProvider.CreateScope();
+
+        var handlers = scope.ServiceProvider.GetServices(handlerType);
         //var method = handlerType.GetMethod("Handle");
 
          var method =  _methondCache.GetOrAdd(handlerType, handlerType=>  handlerType.GetMethod("Handle"));
@@ -49,7 +51,9 @@ public class Dispatcher
     {
         var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
 
-        var handler = _serviceProvider.GetRequiredService(handlerType);
+        using var scope = _serviceProvider.CreateScope();
+
+        var handler = scope.ServiceProvider.GetRequiredService(handlerType);
 
         //var method = handlerType.GetMethod("Handle");
         if (!_methondCache.TryGetValue(handlerType, out var method))

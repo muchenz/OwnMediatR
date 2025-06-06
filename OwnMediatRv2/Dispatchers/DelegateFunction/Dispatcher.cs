@@ -16,7 +16,9 @@ public class Dispatcher
 
     public Task<TResult> Send<TResult>(ICommand<TResult> command)
     {
-        var handler = _serviceProvider.GetService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
+        using var scope = _serviceProvider.CreateScope();
+
+        var handler = scope.ServiceProvider.GetService(typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult)));
         if (handler is null) throw new NullReferenceException("Handler is null");
         var result = InvokeCreateDelegateWithResultAsync(handler, command);
 
@@ -59,7 +61,9 @@ public class Dispatcher
 
     public async Task Send(IEvent e)
     {
-        var handlers = _serviceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(e.GetType()));
+        using var scope = _serviceProvider.CreateScope();
+
+        var handlers = scope.ServiceProvider.GetServices(typeof(IEventHandler<>).MakeGenericType(e.GetType()));
 
         foreach (var handler in handlers)
         {

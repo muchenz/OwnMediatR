@@ -15,7 +15,9 @@ public class Dispatcher
     {
         var handlerType = typeof(IEventHandler<>).MakeGenericType(command.GetType());
 
-        IEnumerable<dynamic> handlers = _serviceProvider.GetServices(handlerType);
+        using var scope = _serviceProvider.CreateScope();
+
+        IEnumerable<dynamic> handlers = scope.ServiceProvider.GetServices(handlerType);
 
         foreach (dynamic handler in handlers)
         {
@@ -35,7 +37,9 @@ public class Dispatcher
     {
         var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
 
-        dynamic handler = _serviceProvider.GetRequiredService(handlerType);
+        using var scope = _serviceProvider.CreateScope();
+
+        dynamic handler = scope.ServiceProvider.GetRequiredService(handlerType);
 
 
         return await handler.Handle((dynamic)command);

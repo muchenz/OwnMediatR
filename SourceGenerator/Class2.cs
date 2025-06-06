@@ -16,7 +16,7 @@ public class DispatcherGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
 #if DEBUG
-        Debugger.Launch();
+        //Debugger.Launch();
 #endif
         var handlerTypes = context.SyntaxProvider
             .CreateSyntaxProvider(

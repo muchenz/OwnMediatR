@@ -42,7 +42,9 @@ public class Dispatcher
         //var result = await InvokeLabdaWithResultAsync(handler, command);
         //var task = (Task<TResult>)InvokeLamdaAsync(handler, command);
 
-        var res = GeneratedDispatchers.Dispatcher.Send(command, _serviceProvider);
+        using var scope = _serviceProvider.CreateScope();
+
+        var res = GeneratedDispatchers.Dispatcher.Send(command, scope.ServiceProvider);
 
         return res;
     }
@@ -62,8 +64,9 @@ public class Dispatcher
             //   // await InvokeLamdaAsync(handler, evet);
             //    await InvokeCreateDelegateAsync(handler, evet);
             //}
+            using var scope = _serviceProvider.CreateScope();
 
-            await GeneratedDispatchers.Dispatcher.Publish(evet, _serviceProvider);
+            await GeneratedDispatchers.Dispatcher.Publish(evet, scope.ServiceProvider);
         }
     }
 
