@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
 
-namespace SourceGenerator_MY;
+namespace OwnMediatR.SourceGenerator;
 
 
 [Generator]
