@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace OwnMediatR.Validators;
+namespace Example.Validators;
 
 public class GetAlaCommandValidator : AbstractValidator<GetAlaCommand>
 {

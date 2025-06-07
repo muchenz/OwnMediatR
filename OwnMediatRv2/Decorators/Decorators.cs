@@ -1,7 +1,7 @@
-﻿using FluentValidation;
-using OwnMediatR.Lib.Contracts;
+﻿using Contracts;
+using FluentValidation;
 
-namespace OwnMediatR.Lib.Decorators;
+namespace Examplev2.Decorators;
 
 class LoggingCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCommand, TResult>
     where TCommand : ICommand<TResult>

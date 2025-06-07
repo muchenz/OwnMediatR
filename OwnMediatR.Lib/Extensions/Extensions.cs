@@ -1,5 +1,5 @@
-﻿using Contracts;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OwnMediatR.Lib.Contracts;
 
 namespace OwnMediatR.Lib.Extensions;
 

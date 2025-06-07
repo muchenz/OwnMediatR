@@ -1,14 +1,9 @@
-﻿using Contracts;
+﻿using Example;
 using FluentValidation;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Linq.Expressions;
-using Wrappers;
+using OwnMediatR.Lib.Contracts;
 using OwnMediatR.Lib.Dispatchers.Wrapperv1;
 using OwnMediatR.Lib.Extensions;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddOpenApi();
 //builder.Services.AddScoped<ICommandHandler<GetAlaCommand, int>, GetAlaCommandHandler>();
+
 builder.Services.AddScoped<Dispatcher>();
 
 builder.Services.AddCommandAndQueries();
 
-builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, includeInternalTypes:true);
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, includeInternalTypes: true);
 //builder.Services.TryDecorateOpenGeneric(typeof(ICommandHandler<,>), typeof(ValidationCommandHandlerDecorator<,>));
 builder.Services.TryDecorateOpenGeneric(typeof(ICommandHandler<,>), typeof(LoggingCommandHandlerDecorator<,>));
 
@@ -29,7 +25,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-   // app.MapOpenApi();
+    // app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
@@ -47,7 +43,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher) =>
     Stopwatch sw = Stopwatch.StartNew();
     //for (int i = 0; i < 1000000; i++)
 
-        await dispatcher.Send(command);
+    await dispatcher.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds);
     sw.Stop();
     var res2 = await dispatcher.Send(command2);
@@ -68,11 +64,11 @@ app.Run();
 
 
 
-public record GetAlaCommand(int Age):ICommand<int>;
-public record GetAlaWrapperCommand(int Age):ICommandWrapper<int>;
+public record GetAlaCommand(int Age) : ICommand<int>;
+public record GetAlaWrapperCommand(int Age) : ICommandWrapper<int>;
 
 public class GetAlaCommandHandler : ICommandHandler<GetAlaCommand, int>
-{   
+{
 
     public Task<int> Handle(GetAlaCommand command)
     {
@@ -132,7 +128,7 @@ class ValidationCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCo
                 if (!results.IsValid)
                 {
 
-                    Console.WriteLine($"[VALIDATION]  {string.Join(',', results.Errors.Select(a=>a.ErrorMessage))}");
+                    Console.WriteLine($"[VALIDATION]  {string.Join(',', results.Errors.Select(a => a.ErrorMessage))}");
 
                     return default;
 
@@ -141,12 +137,12 @@ class ValidationCommandHandlerDecorator<TCommand, TResult> : ICommandHandler<TCo
             }
 
         }
-            return await _inner.Handle(command);
+        return await _inner.Handle(command);
     }
 }
 
 
-namespace Wrappers //for test :)
+namespace Example //for test :)
 {
     public interface ICommandWrapper<TResult> : ICommand<MessageAndStatusAndData<TResult>>
     { }
@@ -199,15 +195,15 @@ public class MessageAndStatusAndData<T> : MessageAndStatus
 
 ///////////
 ///
-public record AlaArrivedCommand:ICommand;
-public record AlaArrivedCommand2:ICommand;
+public record AlaArrivedCommand : ICommand;
+public record AlaArrivedCommand2 : ICommand;
 
 public class AlaArrivedCommandHandler : ICommandHandler<AlaArrivedCommand>
 {
     public Task Handle(AlaArrivedCommand command)
     {
 
-        System.Console.WriteLine("ala arrived - handler 1");
+        Console.WriteLine("ala arrived - handler 1");
         return Task.CompletedTask;
     }
 }
@@ -217,7 +213,7 @@ public class AlaArrivedCommandHandler2 : ICommandHandler<AlaArrivedCommand>
     public Task Handle(AlaArrivedCommand command)
     {
 
-        System.Console.WriteLine("ala arrived - handler 2");
+        Console.WriteLine("ala arrived - handler 2");
         return Task.CompletedTask;
     }
 }
@@ -227,7 +223,7 @@ public class AlaArrivedCommand2Handler : ICommandHandler<AlaArrivedCommand2>
     public Task Handle(AlaArrivedCommand2 command)
     {
 
-        System.Console.WriteLine("ala arrived 2 - handler 1");
+        Console.WriteLine("ala arrived 2 - handler 1");
         return Task.CompletedTask;
     }
 }

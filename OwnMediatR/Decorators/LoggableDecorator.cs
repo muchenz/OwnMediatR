@@ -1,6 +1,6 @@
 ﻿using OwnMediatR.Lib.Extensions;
 
-namespace OwnMediatR.Decorators;
+namespace Example.Decorators;
 
 public static class LoggableDecorator
 {
@@ -14,15 +14,15 @@ public static class LoggableDecorator
                 sd.ServiceType.IsGenericType &&
                 sd.ServiceType.GetGenericTypeDefinition() == openGenericInterface &&
                 (
-                    (sd.ImplementationType != null &&
-                     sd.ImplementationType.GetCustomAttributes(typeof(LoggableAttribute), true).Any())
+                    sd.ImplementationType != null &&
+                     sd.ImplementationType.GetCustomAttributes(typeof(LoggableAttribute), true).Any()
                     ||
-                    (sd.ImplementationInstance != null &&
-                     sd.ImplementationInstance.GetType().GetCustomAttributes(typeof(LoggableAttribute), true).Any())
+                    sd.ImplementationInstance != null &&
+                     sd.ImplementationInstance.GetType().GetCustomAttributes(typeof(LoggableAttribute), true).Any()
                     ||
-                    (sd.ImplementationFactory != null &&
+                    sd.ImplementationFactory != null &&
                      // W przypadku factory — użycie Type może być ograniczone, ale próbujemy
-                     sd.ImplementationFactory.GetType().GetCustomAttributes(typeof(LoggableAttribute), true).Any())
+                     sd.ImplementationFactory.GetType().GetCustomAttributes(typeof(LoggableAttribute), true).Any()
                 )
             )
             .ToList();

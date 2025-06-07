@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using OwnMediatR.Lib.Contracts;
+﻿using Contracts;
 using System.Collections.Concurrent;
 
-namespace OwnMediatR.Lib.Dispatchers.Wrapperv1;
+namespace Examplev2.Dispatchers.Wrapperv1;
 
 public class Dispatcher
 {

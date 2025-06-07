@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Contracts\Contracts.csproj" />
     <ProjectReference Include="..\OwnMediatR.Lib\OwnMediatR.Lib.csproj" />
   </ItemGroup>
 

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Example.CRTP.Contracts.CRTP; //Curiously Recurring Template Pattern
+﻿namespace Example.CRTP.Contracts.CRTP; //Curiously Recurring Template Pattern
 public interface IEvent<TEvent> where TEvent : IEvent<TEvent> { }
 
 public interface IEventHandler<in TEvent> where TEvent : IEvent<TEvent>

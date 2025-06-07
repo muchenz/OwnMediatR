@@ -1,11 +1,11 @@
 ﻿
 //Curiously Recurring Template Pattern
 
+using Example.CRTP.Contracts.CRTP;
+using Example.CRTP.Extensions;
+using FluentValidation;
 using System.Diagnostics;
 using Wrappers;
-using Example.CRTP.Extensions;
-using Example.CRTP.Contracts.CRTP;
-using FluentValidation;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,14 +36,14 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher) =>
     var command = new GetAlaCommand(20);
     var command2 = new GetAlaWrapperCommand(22);
     Stopwatch sw = Stopwatch.StartNew();
-     //for (int i = 0; i < 1000000; i++)
+    //for (int i = 0; i < 1000000; i++)
 
-        await dispatcher.Send(command);
+    await dispatcher.Send(command);
     Console.WriteLine(sw.ElapsedMilliseconds);
     sw.Stop();
     var res2 = await dispatcher.Send(command2);
 
-    return res2.Status + " "+ res2.Data ;
+    return res2.Status + " " + res2.Data;
 });
 
 
@@ -77,12 +77,12 @@ public class Dispatcher
 
             foreach (var handler in handlers)
             {
-                var hand = handler; 
+                var hand = handler;
                 await hand.Handle(command);
             }
         }
     }
-   
+
 }
 
 

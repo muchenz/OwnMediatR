@@ -1,6 +1,6 @@
-﻿using Example.CRTP.Contracts.CRTP;
+﻿using Contracts;
 
-namespace Example.CRTP.Extensions;
+namespace Examplev2.Extensions;
 
 public static class CommandAndQueriesExtension
 {
@@ -18,9 +18,9 @@ public static class CommandAndQueriesExtension
                                 .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeToRegister))
                            ;
 
-            //var handlerTypes2 = handlerTypes.ToList(); //for debug
+            var handlerTypes2 = handlerTypes.ToList(); //for debug
 
-            //var listArgument = handlerTypes2.Select(a => a.GetGenericArguments().Count()).ToList(); //for debug
+            var listArgument = handlerTypes2.Select(a => a.GetGenericArguments().Count()).ToList(); //for debug
 
             handlerTypes.Select(handlerType => new
             {

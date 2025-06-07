@@ -1,14 +1,13 @@
-using Contracts;
+using Examplev2.Dispatchers.Dynamic;
 using MediatR;
-using Microsoft.AspNetCore.Http.HttpResults;
-using OwnMediatRv2;
-using OwnMediatR.Lib.Extensions;
+using Contracts;
 using System.Diagnostics;
-using CompiledLambda = OwnMediatR.Lib.Dispatchers.CompiledLambda;
-using Reflection = OwnMediatR.Lib.Dispatchers.Reflection;
-using DelegateFunction = OwnMediatR.Lib.Dispatchers.DelegateFunction;
-using Dynamic = OwnMediatR.Lib.Dispatchers.Dynamic;
-using Wrapperv1 = OwnMediatR.Lib.Dispatchers.Wrapperv1;
+using CompiledLambda = Examplev2.Dispatchers.CompiledLambda;
+using DelegateFunction = Examplev2.Dispatchers.DelegateFunction;
+using Reflection = Examplev2.Dispatchers.Reflection;
+using Dynamaic = Examplev2.Dispatchers.Dynamic;
+using Wrapperv1 = Examplev2.Dispatchers.Wrapperv1;
+using Examplev2.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,31 +16,31 @@ builder.Services.AddScoped<Dispatcher>();
 builder.Services.AddScoped<CompiledLambda.Dispatcher>();
 builder.Services.AddScoped<Reflection.Dispatcher>();
 builder.Services.AddScoped<DelegateFunction.Dispatcher>();
-builder.Services.AddScoped<Dynamic.Dispatcher>();
+builder.Services.AddScoped<Dynamaic.Dispatcher>();
 builder.Services.AddScoped<Wrapperv1.Dispatcher>();
 //builder.Services.AddOpenApi();
 
-builder.Services.AddMediatR(c=>c.RegisterServicesFromAssembly(typeof(Program).Assembly)); 
+builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-   // app.MapOpenApi();
+    // app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
 
 
-app.MapGet("/weatherforecast", async (Dispatcher dispatcher, 
+app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
                                             CompiledLambda.Dispatcher compiledLambdaDispatcher,
                                             Reflection.Dispatcher reflecionDispatcher,
                                             DelegateFunction.Dispatcher delegateFunctionDispatcher,
-                                            Dynamic.Dispatcher dynamicDispatcher,
+                                            Dynamaic.Dispatcher dynamicDispatcher,
                                             Wrapperv1.Dispatcher wrapperv1Dispatcher,
-                                            ISender sender, 
-                                            IPublisher publisher ,
-                                            IServiceProvider _serviceProvider ) =>
+                                            ISender sender,
+                                            IPublisher publisher,
+                                            IServiceProvider _serviceProvider) =>
 {
 
     var command = new GetAlaCommand(20);
@@ -60,18 +59,18 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
 
     for (int i = 0; i < 1000000; i++)
 
-        await dispatcher.Send(command );
+        await dispatcher.Send(command);
 
 
     Console.WriteLine(sw.ElapsedMilliseconds + " generated");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
         await compiledLambdaDispatcher.Send(command);
-    Console.WriteLine(sw.ElapsedMilliseconds+ " compiled lambda");
+    Console.WriteLine(sw.ElapsedMilliseconds + " compiled lambda");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
         await delegateFunctionDispatcher.Send(command);
-    Console.WriteLine(sw.ElapsedMilliseconds +" delegaty");
+    Console.WriteLine(sw.ElapsedMilliseconds + " delegaty");
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
         await reflecionDispatcher.Send(command);
@@ -87,7 +86,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     sw.Restart();
     for (int i = 0; i < 1000000; i++)
         await sender.Send(commandMediatR);
-    Console.WriteLine(sw.ElapsedMilliseconds+ " mediatR");
+    Console.WriteLine(sw.ElapsedMilliseconds + " mediatR");
     sw.Stop();
 
 
@@ -97,7 +96,7 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     Stopwatch sw2 = Stopwatch.StartNew();
     for (int i = 0; i < 1000000; i++)
 
-        await dispatcher.SendEventsGenerated(events);
+        await dispatcher.Send(events);
 
     Console.WriteLine(sw2.ElapsedMilliseconds + " generated");
     sw2.Restart();
@@ -115,20 +114,20 @@ app.MapGet("/weatherforecast", async (Dispatcher dispatcher,
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
         await dynamicDispatcher.Send(events);
-    Console.WriteLine(sw2.ElapsedMilliseconds +" dynamic");
+    Console.WriteLine(sw2.ElapsedMilliseconds + " dynamic");
     sw2.Restart();
     for (int i = 0; i < 1000000; i++)
         await wrapperv1Dispatcher.Send(events);
     Console.WriteLine(sw2.ElapsedMilliseconds + " wrapperv1");
     sw2.Restart();
-    
+
     for (int i = 0; i < 1000000; i++)
         await publisher.Publish(new AlaArrivedEventMediatr());
     Console.WriteLine(sw2.ElapsedMilliseconds + " Mediatr");
 
     sw2.Stop();
 
-    Console.WriteLine(((AlaArrivedEvent)events.First()).I+" "+ ((AlaArrivedEvent2)events.Last()).I);
+    Console.WriteLine(((AlaArrivedEvent)events.First()).I + " " + ((AlaArrivedEvent2)events.Last()).I);
     return Results.Ok();
 });
 
@@ -139,7 +138,7 @@ public class AlaArrivedEvent : IEvent
 {
     public int I { get; set; }
 };
-public class AlaArrivedEvent2: IEvent
+public class AlaArrivedEvent2 : IEvent
 {
     public int I { get; set; }
 }
@@ -182,17 +181,17 @@ public class AlaArrivedMediatrEventHandler2 : INotificationHandler<AlaArrivedEve
 }
 
 public record GetAlaCommand(int Age) : ICommand<Result>;
-public record GetAlaMediatRCommand(int Age) :IRequest<Result>;
+public record GetAlaMediatRCommand(int Age) : IRequest<Result>;
 
 public record Result(int AgeAla);
 
 public class GetAlaMedaitRCommandHandler : IRequestHandler<GetAlaMediatRCommand, Result>
 {
 
-    
+
     public Task<Result> Handle(GetAlaMediatRCommand request, CancellationToken cancellationToken)
     {
-        return Task.FromResult( new Result( request.Age));
+        return Task.FromResult(new Result(request.Age));
     }
 }
 
@@ -201,8 +200,8 @@ public class GetAlaCommandHandler : ICommandHandler<GetAlaCommand, Result>
 
     public Task<Result> Handle(GetAlaCommand command)
     {
-       // Console.WriteLine(nameof(GetAlaCommandHandler));
-        return Task.FromResult(new Result( command.Age));
+        // Console.WriteLine(nameof(GetAlaCommandHandler));
+        return Task.FromResult(new Result(command.Age));
     }
 }
 
@@ -212,7 +211,7 @@ public class AlaArrivedEventHandler : IEventHandler<AlaArrivedEvent>
     public Task Handle(AlaArrivedEvent command)
     {
         command.I++;
-       // Console.WriteLine(nameof(AlaArrivedEventHandler));
+        // Console.WriteLine(nameof(AlaArrivedEventHandler));
         return Task.CompletedTask;
     }
 }
@@ -237,7 +236,7 @@ public class AlaArrivedEvent2Handler : IEventHandler<AlaArrivedEvent2>
     public Task Handle(AlaArrivedEvent2 @event)
     {
         @event.I++;
-       // Console.WriteLine(nameof(AlaArrivedEvent2Handler));
+        // Console.WriteLine(nameof(AlaArrivedEvent2Handler));
         return Task.CompletedTask;
     }
 }
