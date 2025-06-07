@@ -8,5 +8,8 @@
 | SourceGenerated_Benchmark   | 595.6 ns |   9.00 ns |  0.49 ns | 0.2203 |   1.35 KB |
 
 
-1. Source Generator requires a separate project for Contracts (IEvent, IEventHandler<>, etc.) to avoid cyclic dependencies. That's why the lib comes in two versions (with and without Contracts). 
-2. When the dispatcher is injected as a scope (and not as a singleton), you can give up that doing the scope in the Dispatcher class - it will be a little faster.
+1. Source Generator requires a separate project for Contracts (IEvent, IEventHandler<>, etc.) to avoid cyclic dependencies. That's why the lib comes in two versions (with and without Contracts).
+  
+3. When the dispatcher is injected as a scope (and not as a singleton), you can give up that doing the scope in the Dispatcher class - it will be a little faster.
+
+5. In Example.CRTP there is an example for a recursive version of the IEvent<TEvent> where TEvent :IEvent<TEvent> where TEvent : IEvent<TEvent> { }, ICommand<TCommand, TResult> where TCommand : ICommand<TCommand, TResult> { } etc. This type makes dispatching easier, because everything is known at compile time.
