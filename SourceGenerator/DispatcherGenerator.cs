@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
 
-namespace SourceGenerator_MY2;
+namespace SourceGenerator_MY;
 
 
 [Generator]

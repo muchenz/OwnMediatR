@@ -9,12 +9,15 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Contracts\Contracts.csproj" />
+    <ProjectReference Include="..\OwnMediatR.ForSourceGen.Lib\OwnMediatR.ForSourceGen.Lib.csproj" />
     <ProjectReference Include="..\OwnMediatRv2\Examplev2.csproj" />
+    <ProjectReference Include="..\SourceGenerator\SourceGenerator_MY.csproj" />
   </ItemGroup>
 
 </Project>

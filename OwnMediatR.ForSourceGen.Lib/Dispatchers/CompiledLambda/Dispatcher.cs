@@ -1,8 +1,9 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
-namespace Examplev2.Dispatchers.CompiledLambda;
+namespace OwnMediatR.ForSourceGen.Lib.Dispatchers.CompiledLambda;
 
 public class Dispatcher
 {

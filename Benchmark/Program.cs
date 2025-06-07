@@ -1,13 +1,15 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Contracts;
-using Examplev2.Dispatchers.Dynamic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using CompiledLambda = OwnMediatR.Lib.Dispatchers.CompiledLambda;
-using DelegateFunction = OwnMediatR.Lib.Dispatchers.DelegateFunction;
-using Reflection = OwnMediatR.Lib.Dispatchers.Reflection;
-using Wrapped = OwnMediatR.Lib.Dispatchers.Wrapperv1;
+using OwnMediatR.ForSourceGen.Lib.Extensions;
+using CompiledLambda = OwnMediatR.ForSourceGen.Lib.Dispatchers.CompiledLambda;
+using DelegateFunction = OwnMediatR.ForSourceGen.Lib.Dispatchers.DelegateFunction;
+using Reflection = OwnMediatR.ForSourceGen.Lib.Dispatchers.Reflection;
+using Wrapped = OwnMediatR.ForSourceGen.Lib.Dispatchers.Wrapperv1;
+using Dynamic = OwnMediatR.ForSourceGen.Lib.Dispatchers.Dynamic;
+using Benchmark;
 
 
 BenchmarkRunner.Run<MyBenchmark>();
@@ -18,10 +20,11 @@ BenchmarkRunner.Run<MyBenchmark>();
 public class MyBenchmark
 {
     private Reflection.Dispatcher _reflectionDispatcher;
-    private Dispatcher _dynamicDispatcher;
+    private Dynamic.Dispatcher _dynamicDispatcher;
     private CompiledLambda.Dispatcher _compiledLambdaDispatcher;
     private DelegateFunction.Dispatcher _delegateFunctionDispatcher;
     private Wrapped.Dispatcher _wrappedDispatcher;
+    private Dispatcher _sourceGeneratedDispatcher;
 
     private IEvent[] _events = [new AliceArrivedEvent(), new KellyArrivedEvent()];
 
@@ -33,19 +36,21 @@ public class MyBenchmark
             {
                 services.AddCommandAndQueries();
                 services.AddScoped<Reflection.Dispatcher>();
-                services.AddScoped<Dispatcher>();
+                services.AddScoped<Dynamic.Dispatcher>();
                 services.AddScoped<CompiledLambda.Dispatcher>();
                 services.AddScoped<DelegateFunction.Dispatcher>();
                 services.AddScoped<Wrapped.Dispatcher>();
+                services.AddScoped<Dispatcher>();
 
             })
             .Build();
 
         _reflectionDispatcher = host.Services.GetRequiredService<Reflection.Dispatcher>();
-        _dynamicDispatcher = host.Services.GetRequiredService<Dispatcher>();
+        _dynamicDispatcher = host.Services.GetRequiredService<Dynamic.Dispatcher>();
         _compiledLambdaDispatcher = host.Services.GetRequiredService<CompiledLambda.Dispatcher>();
         _delegateFunctionDispatcher = host.Services.GetRequiredService<DelegateFunction.Dispatcher>();
         _wrappedDispatcher = host.Services.GetRequiredService<Wrapped.Dispatcher>();
+        _sourceGeneratedDispatcher = host.Services.GetRequiredService<Dispatcher>();
     }
 
     [Benchmark]
@@ -74,10 +79,17 @@ public class MyBenchmark
     }
 
     [Benchmark]
-    public async Task Wrapped_DispatcherBenchmark()
+    public async Task Wrapped_Benchmark()
     {
 
         await _wrappedDispatcher.Send(_events);
+    }
+
+    [Benchmark]
+    public async Task SourceGenerated_Benchmark()
+    {
+
+        await _sourceGeneratedDispatcher.Send(_events);
     }
 }
 

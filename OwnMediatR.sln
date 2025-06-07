@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.CRTP", "Example.CRTP\Example.CRTP.csproj", "{2584A636-76AF-41C4-B79F-4545621A3097}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OwnMediatR.ForSourceGen.Lib", "OwnMediatR.ForSourceGen.Lib\OwnMediatR.ForSourceGen.Lib.csproj", "{C35A5613-682E-41DA-80AC-3019E3C1E321}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{2584A636-76AF-41C4-B79F-4545621A3097}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2584A636-76AF-41C4-B79F-4545621A3097}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2584A636-76AF-41C4-B79F-4545621A3097}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C35A5613-682E-41DA-80AC-3019E3C1E321}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C35A5613-682E-41DA-80AC-3019E3C1E321}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C35A5613-682E-41DA-80AC-3019E3C1E321}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C35A5613-682E-41DA-80AC-3019E3C1E321}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

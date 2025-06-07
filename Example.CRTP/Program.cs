@@ -1,11 +1,11 @@
 ﻿
 //Curiously Recurring Template Pattern
 
+using Example.CRTP;
 using Example.CRTP.Contracts.CRTP;
 using Example.CRTP.Extensions;
 using FluentValidation;
 using System.Diagnostics;
-using Wrappers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -112,7 +112,7 @@ public class GetAlaCommandHandler2 : IHandlerWrapper<GetAlaWrapperCommand, int>
 
 
 
-namespace Wrappers //for test :)
+namespace Example.CRTP //for test :)
 {
     public interface ICommandWrapper<TWrapper, TResult> : ICommand<TWrapper, MessageAndStatusAndData<TResult>>
         where TWrapper : ICommandWrapper<TWrapper, TResult>

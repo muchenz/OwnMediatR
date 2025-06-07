@@ -1,6 +1,7 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Examplev2;
+namespace Benchmark;
 
 public class Dispatcher
 {

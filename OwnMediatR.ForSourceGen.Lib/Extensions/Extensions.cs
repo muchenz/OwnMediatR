@@ -1,13 +1,14 @@
 ﻿using Contracts;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Examplev2.Extensions;
+namespace OwnMediatR.ForSourceGen.Lib.Extensions;
 
 public static class CommandAndQueriesExtension
 {
     public static void AddCommandAndQueries(this IServiceCollection service)
     {
 
-        Type[] typesToRegister = [typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(IEventHandler<>)];//, typeof(IHandlerWrapper<,>)];
+        Type[] typesToRegister = [typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(IEventHandler<>), typeof(IQueryHandler<,>)];//, typeof(IHandlerWrapper<,>)];
 
         foreach (Type typeToRegister in typesToRegister)
         {

@@ -8,7 +8,7 @@ public static class CommandAndQueriesExtension
     public static void AddCommandAndQueries(this IServiceCollection service)
     {
 
-        Type[] typesToRegister = [typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(IEventHandler<>)];//, typeof(IHandlerWrapper<,>)];
+        Type[] typesToRegister = [typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(IEventHandler<>), typeof(IQueryHandler<,>)];//, typeof(IHandlerWrapper<,>)];
 
         foreach (Type typeToRegister in typesToRegister)
         {

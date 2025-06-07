@@ -23,7 +23,7 @@ public interface ICommandHandler<in TCommand, TResult> where TCommand : ICommand
 
 public interface IQuery<in TResult> { }
 
-public interface QueryHandler<in TCommand, TResult> where TCommand : ICommand<TResult>
+public interface IQueryHandler<in TCommand, TResult> where TCommand : ICommand<TResult>
 {
 
     Task<TResult> Handle(TCommand command);

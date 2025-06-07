@@ -1,13 +1,13 @@
-using Examplev2.Dispatchers.Dynamic;
-using MediatR;
 using Contracts;
+using OwnMediatR.ForSourceGen.Lib.Dispatchers.Dynamic;
+using OwnMediatR.ForSourceGen.Lib.Extensions;
+using MediatR;
 using System.Diagnostics;
-using CompiledLambda = Examplev2.Dispatchers.CompiledLambda;
-using DelegateFunction = Examplev2.Dispatchers.DelegateFunction;
-using Reflection = Examplev2.Dispatchers.Reflection;
-using Dynamaic = Examplev2.Dispatchers.Dynamic;
-using Wrapperv1 = Examplev2.Dispatchers.Wrapperv1;
-using Examplev2.Extensions;
+using CompiledLambda = OwnMediatR.ForSourceGen.Lib.Dispatchers.CompiledLambda;
+using DelegateFunction = OwnMediatR.ForSourceGen.Lib.Dispatchers.DelegateFunction;
+using Dynamaic = OwnMediatR.ForSourceGen.Lib.Dispatchers.Dynamic;
+using Reflection = OwnMediatR.ForSourceGen.Lib.Dispatchers.Reflection;
+using Wrapperv1 = OwnMediatR.ForSourceGen.Lib.Dispatchers.Wrapperv1;
 
 var builder = WebApplication.CreateBuilder(args);
 

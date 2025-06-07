@@ -14,7 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Contracts\Contracts.csproj" />
+	  <ProjectReference Include="..\Contracts\Contracts.csproj" />
+	  <ProjectReference Include="..\OwnMediatR.ForSourceGen.Lib\OwnMediatR.ForSourceGen.Lib.csproj" />
     <ProjectReference Include="..\SourceGenerator\SourceGenerator_MY.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
