@@ -6,3 +6,5 @@
 | DelegateFunction_Dispatcher | 890.0 ns |  64.92 ns |  3.56 ns | 0.3071 |   1.88 KB |
 | Wrapped_Benchmark           | 545.9 ns |  17.71 ns |  0.97 ns | 0.1993 |   1.23 KB |
 | SourceGenerated_Benchmark   | 595.6 ns |   9.00 ns |  0.49 ns | 0.2203 |   1.35 KB |
+
+

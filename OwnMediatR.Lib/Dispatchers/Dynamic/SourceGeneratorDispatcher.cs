@@ -3,11 +3,11 @@ using OwnMediatR.Lib.Contracts;
 
 namespace OwnMediatR.Lib.Dispatchers.Dynamic;
 
-public class Dispatcher
+public class SourceGeneratorDispatcher
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public Dispatcher(IServiceProvider serviceProvider)
+    public SourceGeneratorDispatcher(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
