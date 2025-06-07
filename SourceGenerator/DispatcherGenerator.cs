@@ -41,6 +41,7 @@ public class DispatcherGenerator : IIncrementalGenerator
 
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Threading.Tasks;");
+            sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
             sb.AppendLine("using Contracts;");
             sb.AppendLine("namespace GeneratedDispatchers");
             sb.AppendLine("{");
